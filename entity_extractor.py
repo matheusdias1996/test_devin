@@ -12,7 +12,7 @@ def _get_google_genai():
     return genai
 
 # Default safety settings to block offensive content
-DEFAULT_SAFETY_SETTINGS = None  # Will be initialized in the class
+DEFAULT_SAFETY_SETTINGS_V2 = None  # Will be initialized in the class
 
 
 class EntityExtractor:
