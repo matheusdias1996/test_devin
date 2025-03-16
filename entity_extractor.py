@@ -1,5 +1,6 @@
 """Module for extracting entities and generating summaries from text using LLMs."""
-from typing import Dict, Any, Optional
+import io
+from typing import Dict, Any, Optional, Union
 
 
 def _get_google_genai():
@@ -25,7 +26,7 @@ class EntityExtractor:
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel("gemini-1.5-flash")
 
-    def extract_entities(self, text: str, entity_types: list[str]) -> Dict[str, Any]:
+    def extract_entities(self, content: Union[str, io.BytesIO], entity_types: list[str]) -> Dict[str, Any]:
         """
         Extract specified entities from text.
 
@@ -37,7 +38,7 @@ class EntityExtractor:
             Dictionary of extracted entities
         """
         # Create prompt for the LLM
-        prompt = self._create_extraction_prompt(text, entity_types)
+        prompt = self._create_extraction_prompt(content, entity_types)
         print("\n=== Prompt sent to LLM ===")
         print(prompt)
 
@@ -82,7 +83,7 @@ class EntityExtractor:
             print(f"Error message: {str(e)}")
             raise Exception(f"Error calling LLM: {str(e)}")
 
-    def summarize_text(self, text: str, max_length: Optional[int] = None) -> str:
+    def summarize_text(self, content: Union[str, io.BytesIO], max_length: Optional[int] = None) -> str:
         """
         Generate a summary of the provided text.
 
@@ -94,7 +95,7 @@ class EntityExtractor:
             Summary of the text
         """
         # Create prompt for the LLM
-        prompt = self._create_summary_prompt(text, max_length)
+        prompt = self._create_summary_prompt(content, max_length)
         print("\n=== Summary Prompt sent to LLM ===")
         print(prompt)
 
@@ -121,7 +122,7 @@ class EntityExtractor:
             print(f"Error message: {str(e)}")
             raise Exception(f"Error generating summary: {str(e)}")
 
-    def _create_summary_prompt(self, text: str, max_length: Optional[int] = None) -> str:
+    def _create_summary_prompt(self, content: Union[str, io.BytesIO], max_length: Optional[int] = None) -> str:
         """
         Create a prompt for text summarization.
 
@@ -143,14 +144,11 @@ Rules:
 4. Preserve the original meaning and context
 5. {length_constraint}
 
-Text to summarize:
-{text}
-
-Provide only the summary, without any introductory phrases like "Here's a summary" or "Summary:"."""
+Provide a summary of the PDF document, without any introductory phrases like "Here's a summary" or "Summary:"."""
 
         return prompt
 
-    def _create_extraction_prompt(self, text: str, entity_types: list[str]) -> str:
+    def _create_extraction_prompt(self, content: Union[str, io.BytesIO], entity_types: list[str]) -> str:
         """
         Create a prompt for entity extraction.
 
@@ -163,7 +161,7 @@ Provide only the summary, without any introductory phrases like "Here's a summar
         """
         entities_str = ", ".join(entity_types)
 
-        prompt = f"""You are a JSON generator. Your task is to extract specific entities from text and format them as JSON.
+        prompt = f"""You are a JSON generator. Your task is to extract specific entities from a PDF document and format them as JSON.
 
 Extract these entities: {entities_str}
 
@@ -172,9 +170,6 @@ Rules:
 2. Keys must be exactly as specified
 3. Values should be the extracted entities or null if not found
 4. Do not include any explanations or additional text
-
-Text to analyze:
-{text}
 
 Remember: Return ONLY the JSON object, nothing else."""
 
