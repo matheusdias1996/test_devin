@@ -8,11 +8,6 @@ import streamlit as st
 from entity_extractor import EntityExtractor
 from css_loader import load_css
 
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv()
-
-
 def main():
     """Run the Streamlit app."""
     # Configure page settings
@@ -40,10 +35,10 @@ def main():
         unsafe_allow_html=True
     )
 
-    # Get API key from environment variable
-    api_key = os.getenv("GOOGLE_API_KEY")
+    # Get API key from user input
+    api_key = st.text_input("Enter your Google API Key:", type="password")
     if not api_key:
-        st.error("Please set GOOGLE_API_KEY in your .env file")
+        st.warning("Please enter your Google API Key to use the app")
         st.stop()
 
     # Create a container for the file uploader
